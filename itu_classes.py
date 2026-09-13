@@ -146,48 +146,6 @@ class DiePool():
 		self.combo_mults = dice_pool_dict(dice).combo_mults
 		self.total_mult = dice_pool_dict(dice).total_mult
 
-	def getSimpleDamage(self, kratos_pool):
-		damage_dict = {}
-
-		for symbol_pool, mult in self.combo_mults.items():
-			damage_total = symbol_pool[0]
-
-			breaks = kratos_pool.breaks
-			fires = kratos_pool.fires
-			hopes = kratos_pool.hopes
-
-			potential = symbol_pool[1]
-			dots = symbol_pool[2]
-
-			# use breaks first
-			converted = min(breaks, potential)
-			damage_total += converted
-			breaks -= converted
-			potential -= converted
-
-			# use hopes on dots
-			converted = min(hopes, dots)
-			damage_total += converted
-			hopes -= converted
-			dots -= converted #technically no longer necessary to keep track of this
-
-			# use remaining hopes and fires
-			converted = min(hopes, potential)
-			damage_total += converted
-			hopes -= converted
-			potential -= converted
-
-			converted = min(fires, potential)
-			damage_total += converted
-			fires -= converted
-			potential -= converted
-
-			if damage_total not in damage_dict:
-				damage_dict[damage_total] = 0
-			damage_dict[damage_total] += mult
-
-		return damage_dict
-
 	def DiceText(self):
 		final = ""
 
@@ -211,32 +169,6 @@ class DiePool():
 				perc_str = " " + perc_str
 
 			final += " > " + perc_str + " of\t" + formatDamageTuple(result) + "\n"
-
-		return final
-
-	def SimpleDamageText(self, kratos_pool):
-		damage_dict = self.getSimpleDamage(kratos_pool)
-
-		final = "If you roll " + self.DiceText() + ", and your Kratos table is"
-
-		# conditional leading newline. "your Kratos table is empty" does not need a newline
-		if not kratos_pool.isEmpty():
-			final += "\n  "
-
-		final += kratos_pool.PoolText() + "\nThen you have:\n"
-
-		for damage, mult in sorted(damage_dict.items()):
-			perc_str = str(round(mult * 100 / self.total_mult, 1)) + "%"
-
-			# left-pad single-digit percents
-			if mult / self.total_mult < 0.1:
-				perc_str = " " + perc_str
-
-			dmg_str = str(damage) + chr(int('3031', 16)) + " total"
-			if damage < 10:
-				dmg_str = " " + dmg_str
-
-			final += " > " + perc_str + " of\t" + dmg_str + "\n"
 
 		return final
 
