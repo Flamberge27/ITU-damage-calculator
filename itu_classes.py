@@ -127,7 +127,8 @@ class DiePool():
 				
 				if ignore_dots:
 					new_combo = (combo[0] + die_face.power,
-						combo[1] + die_face.potential)
+								 combo[1] + die_face.potential,
+								 0)
 					
 				else:
 					new_combo = (combo[0] + die_face.power,
@@ -224,13 +225,74 @@ class Weapon():
 					print(na + ": kept " + str(hits) + " hit pool (" + str(hit_dict[hits]) + ") instead of calc value (" + str(hit))
 
 class BPCard():
-	def __init__(self, na = 'temp', AT = 0, goodness = {}, traits = []):
+	def __init__(self, na = 'temp', AT = 0, goodness = {}, traits = [], lvl = 1):
 		self.name = na
 		self.AT_base = AT
+		self.traits = traits
+		self.BPlevel = lvl
 
-		self.fail = -1
-		self.wound = 1
-		self.crit = 1
+		self.result_ratings = goodness
 
-		if 'hardened' in traits:
-			self.crit -= 2
+		""" Ratings scale:
+		-1	:	Quite bad (fails with bad responses, some egregious Wound responses)
+
+		0	:	Missed attack (most fails)
+
+		1	:	Good (most wounds, most crits)
+
+		2	:	Doubly good (bonus attacks, bonus wounds, crit gear, etc.). BP3s are two wounds, so are here by default
+
+		3	:	Incredibly good (generally reserved for BP3 crits with bonus attacks/wounds or death blows)
+		#"""
+		if 'F' not in goodness:
+			self.result_ratings['F'] = 0 	# fails are generally bad 
+
+		if 'W' not in goodness:
+			self.result_ratings['W'] = 1	# wounds are generally good
+
+		if 'C' not in goodness:
+			if self.BPlevel == 3:
+				self.result_ratings['C'] = 2	# BP3s give 2 wounds and a core
+			else:
+				self.result_ratings['C'] = 1	# crits are generally good, but by default stay at +1
+
+	"""
+	damageResult - calculates this BP's valuation of a particular damage number
+	
+	Assumes:
+		self.ratings was correctly populated
+	
+	Inputs:
+		damage 		- raw damage number, after pool has been fully analyzed
+		crit		- whether this was a critical hit
+		wep_traits	- array of relevant weapon traits (armor-piercing, spear/sword/etc., metal, so on)
+		failRating	- how good a Fail is right now. Diversions (or certain fights) may make failing better than normal.
+	
+	Returns:
+		one number, about your exact result
+	# """
+	def damageResult(self, damage, crit = False, wep_traits = [], failRating = -2):
+		result = -1
+
+		AT = self.AT_base
+
+		# damage mod calculations
+		# for now, only Hardened is implemented as an example
+		if 'hardened' in self.traits and not (crit or 'piercing' in wep_traits):
+			AT += 2
+
+		# space for other damage mod calculations as I think of them/find them
+		# note that this assumes that the power pool is DONE - so, leave this
+		# for abilities like Clutch
+
+		if damage >= AT:
+			if crit:
+				result = self.result_ratings['C']
+			else:
+				result = self.result_ratings['W']
+
+		else:
+			result = max(self.result_ratings['F'], failRating)		# this is why it's important not to set diversionRating if no diversions are in the pool
+
+
+		

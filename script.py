@@ -11,22 +11,26 @@ def getSimpleDamage(dice_pool_dict, dice_combination, kratos_pool):
 	dicePool = dice_pool_dict[dice_combination]
 
 	for symbol_pool, mult in dicePool.combo_mults.items():
+
 		damage_total = symbol_pool[0]
 		breaks = kratos_pool.breaks
 		fires = kratos_pool.fires
 		hopes = kratos_pool.hopes
 		potential = symbol_pool[1]
 		dots = symbol_pool[2]
+
 		# use breaks first
 		converted = min(breaks, potential)
 		damage_total += converted
 		breaks -= converted
 		potential -= converted
+
 		# use hopes on dots
 		converted = min(hopes, dots)
 		damage_total += converted
 		hopes -= converted
 		dots -= converted #technically no longer necessary to keep track of this
+
 		# use remaining hopes and fires
 		converted = min(hopes, potential)
 		damage_total += converted
@@ -36,9 +40,11 @@ def getSimpleDamage(dice_pool_dict, dice_combination, kratos_pool):
 		damage_total += converted
 		fires -= converted
 		potential -= converted
+
 		if damage_total not in damage_dict:
 			damage_dict[damage_total] = 0
 		damage_dict[damage_total] += mult
+
 	return damage_dict
 
 def SimpleDamageText(dice_pool_dict, dice_combination, kratos_pool):
@@ -63,13 +69,13 @@ def SimpleDamageText(dice_pool_dict, dice_combination, kratos_pool):
 
 dice_pool_dict = {}
 
-testDicePool = DiePool((1,3,1), dice_pool_dict, ignore_dots=False)
+testDicePool = DiePool((3,2,0), dice_pool_dict, ignore_dots=True)
 
-#print(testDicePool.SymbolMultiplicityText())
+print(testDicePool.SymbolMultiplicityText())
 
-testKratosPool = KratosPool(brk = 3, fir= 4, hop = 1)
+testKratosPool = KratosPool(brk = 4)
 
-print(SimpleDamageText(dice_pool_dict, (1,3,1), testKratosPool))
+print(SimpleDamageText(dice_pool_dict, (3,2,0), testKratosPool))
 
 
 """
